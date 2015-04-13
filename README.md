@@ -25,3 +25,10 @@ The scrolling is even smoother by using `window.requestAnimationFrame()` which s
     ```
 
 4. Tada!
+
+## Browser Compatibility
+
+Tested and working in:
+* IE9+
+* Firefox >= 35.0
+* Chrome >= 41.0.2272.118
