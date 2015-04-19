@@ -1,77 +1,79 @@
-(function(window, document) {
-    var getOffsetTop = function(el) {
-        if(!el) {
+/*jslint browser: true */
+(function (window, document) {
+    "use strict";
+
+    function getOffsetTop(el) {
+        if (!el) {
             return 0;
         }
-        var yOffset = el.offsetTop;
-        var parent = el.offsetParent;
-        yOffset += getOffsetTop(parent);
-        return yOffset;
-    }; 
-    var getScrollTop = function(scrollable) {
-        return scrollable.scrollTop || document.body.scrollTop || document.documentElement.scrollTop;
-    };
-    var smoothScroll = function(e) {
-        e.preventDefault();
-        
-        var source = e.target;
-        if(!source) {
-            return;
-        }
-        
-        var targetHref = source.getAttribute('href');
-        if(!targetHref) {
-            return;
-        }
-        
-        targetHref = targetHref.substring(targetHref.indexOf('#') + 1);
-        var target = document.getElementById(targetHref);
-        if(!target) {
-            return;
-        }
-        
-        var offsetY = getOffsetTop(target);
-        
-        scrollTo(window, {x: 0, y: offsetY}, 1000);
-    };
-    
-    var scrollTo = function(scrollable, coords, millisecondsToTake) {
-        var currentY = getScrollTop(scrollable);
-        if (coords.y == currentY || typeof scrollable.scrollTo !== 'function') {
-            return;
-        }
-        
-        var diffY = coords.y - currentY;
-        
-        var iterations = millisecondsToTake / 1000 * 60;
-        var perIteration = diffY / iterations;
 
-        var startTimestamp = null;
-        var doScroll = function(currentTimestamp) {
-            var progress;
-            if(startTimestamp === null) {
-            	startTimestamp = currentTimestamp;
+        var yOffset = el.offsetTop,
+            parent = el.offsetParent;
+
+        yOffset += getOffsetTop(parent);
+
+        return yOffset;
+    }
+
+    function getScrollTop(scrollable) {
+        return scrollable.scrollTop || document.body.scrollTop || document.documentElement.scrollTop;
+    }
+
+    function scrollTo(scrollable, coords, millisecondsToTake) {
+        var currentY = getScrollTop(scrollable),
+            diffY = coords.y - currentY,
+            startTimestamp = null;
+
+        if (coords.y === currentY || typeof scrollable.scrollTo !== 'function') {
+            return;
+        }
+
+        function doScroll(currentTimestamp) {
+            if (startTimestamp === null) {
+                startTimestamp = currentTimestamp;
             }
-            progress = currentTimestamp - startTimestamp;
-            var fractionDone = (progress / millisecondsToTake);
-            var pointOnSineWave = Math.sin(fractionDone * Math.PI / 2);
+
+            var progress = currentTimestamp - startTimestamp,
+                fractionDone = (progress / millisecondsToTake),
+                pointOnSineWave = Math.sin(fractionDone * Math.PI / 2);
             scrollable.scrollTo(0, currentY + (diffY * pointOnSineWave));
 
-            if(progress < millisecondsToTake) {
-            	window.requestAnimationFrame(doScroll);
+            if (progress < millisecondsToTake) {
+                window.requestAnimationFrame(doScroll);
             } else {
-            	// Ensure we're at our destination
+                // Ensure we're at our destination
                 scrollable.scrollTo(coords.x, coords.y);
             }
-        };
-        
+        }
+
         window.requestAnimationFrame(doScroll);
-    };
-    
-    var targets = document.querySelectorAll('.js_smoothScroll');
-    for(var i in targets) {
-        if(typeof targets[i] === 'object') {
-            targets[i].addEventListener('click', smoothScroll);
+    }
+
+    function smoothScroll(e) {
+        e.preventDefault();
+
+        var source = e.target,
+            targetHref = source.getAttribute('href'),
+            target = null;
+
+        if (!source || !targetHref) {
+            return;
+        }
+
+        targetHref = targetHref.substring(targetHref.indexOf('#') + 1);
+        target = document.getElementById(targetHref);
+        if (!target) {
+            return;
+        }
+
+        scrollTo(window, {x: 0, y: getOffsetTop(target)}, 1000);
+    }
+
+    var targets = document.querySelectorAll('.js_smoothScroll'),
+        target = null;
+    for (target in targets) {
+        if (typeof targets[target] === 'object') {
+            targets[target].addEventListener('click', smoothScroll);
         }
     }
-})(window, document);
+}(window, document));
