@@ -72,8 +72,6 @@ var prefixes = ['moz', 'webkit', 'o'],
             return;
         }
 
-        e.preventDefault();
-
         var source = e.target,
             targetHref = source.hash,
             target = null;
