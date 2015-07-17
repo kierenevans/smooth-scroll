@@ -2,6 +2,21 @@
 (function (window, document) {
     "use strict";
 
+var prefixes = ['moz', 'webkit', 'o'],
+      animationFrame;
+
+    // Modern rAF prefixing without setTimeout
+    function requestAnimationFrameNative() {
+        prefixes.map(function(prefix) {
+            if (!window.requestAnimationFrame) {
+                animationFrame = window[prefix + 'RequestAnimationFrame'];
+            } else {
+                animationFrame = requestAnimationFrame;
+            }
+        });
+    }
+    requestAnimationFrameNative();
+
     function getOffsetTop(el) {
         if (!el) {
             return 0;
@@ -39,41 +54,45 @@
             scrollable.scrollTo(0, currentY + (diffY * pointOnSineWave));
 
             if (progress < millisecondsToTake) {
-                window.requestAnimationFrame(doScroll);
+                animationFrame(doScroll);
             } else {
                 // Ensure we're at our destination
                 scrollable.scrollTo(coords.x, coords.y);
             }
         }
 
-        window.requestAnimationFrame(doScroll);
+        animationFrame(doScroll);
     }
 
-    function smoothScroll(e) {
-        e.preventDefault();
+    // Declaire scroll duration, (before script) 
+   var speed = window.smoothScrollSpeed || 1000; 
+
+    function smoothScroll(e) {   // no smooth scroll class to ignore links
+        if(e.target.className === 'no-ss'){
+            return;
+        }
 
         var source = e.target,
-            targetHref = source.getAttribute('href'),
+            targetHref = source.hash,
             target = null;
 
         if (!source || !targetHref) {
             return;
         }
 
-        targetHref = targetHref.substring(targetHref.indexOf('#') + 1);
+        targetHref = targetHref.substring(1);
         target = document.getElementById(targetHref);
         if (!target) {
             return;
         }
 
-        scrollTo(window, {x: 0, y: getOffsetTop(target)}, 1000);
+        scrollTo(window, {
+            x: 0,
+            y: getOffsetTop(target)
+        }, speed);
     }
 
-    var targets = document.querySelectorAll('.js_smoothScroll'),
-        target = null;
-    for (target in targets) {
-        if (typeof targets[target] === 'object') {
-            targets[target].addEventListener('click', smoothScroll);
-        }
-    }
+    // Uses target's hash for scroll
+    document.addEventListener('click', smoothScroll, false);
+
 }(window, document));
